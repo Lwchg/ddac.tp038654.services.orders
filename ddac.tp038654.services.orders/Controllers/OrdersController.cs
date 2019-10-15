@@ -31,9 +31,18 @@ namespace ddac.tp038654.services.orders.Controllers
 
         // GET: api/Orders/5
         [HttpGet("{id}", Name = "Get")]
-        public string Get(int id)
+        public IEnumerable<Order> Get(string id)
         {
-            return "value";
+            string userId = id;
+            List<Order> orders = _tableStorageService.RetrieveMultipleEntityUsingPartitionQueryAsync<Order>(id, "orders").Result;
+
+            foreach (var item in orders)
+            {
+                List<OrderItem> orderItems = _tableStorageService.RetrieveMultipleEntityUsingPartitionQueryAsync<OrderItem>(item.RowKey, "ordersitems").Result;
+                item.OrderItems = orderItems;
+            }
+
+            return orders;
         }
 
         // POST: api/Orders
@@ -42,7 +51,9 @@ namespace ddac.tp038654.services.orders.Controllers
         {
             try
             {
-                await _tableStorageService.InsertOrMergeEntityAsync(order);
+                await _tableStorageService.InsertOrMergeMultipleEntityAsync(order.OrderItems, "ordersitems");
+
+                await _tableStorageService.InsertOrMergeEntityAsync(order, "orders");
                 await _serviceBusSender.SendMessage(order);
                 return Ok(new { Success = true, message="" });
             }
@@ -56,8 +67,10 @@ namespace ddac.tp038654.services.orders.Controllers
 
         // PUT: api/Orders/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public IActionResult Put(string id, [FromBody] OrderItem orderItem)
         {
+            _tableStorageService.InsertOrMergeEntityAsync<OrderItem>(orderItem, "ordersitems");
+            return Ok();
         }
 
         // DELETE: api/ApiWithActions/5

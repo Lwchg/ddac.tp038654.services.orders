@@ -9,8 +9,10 @@ namespace ddac.tp038654.services.orders.Interface
 {
     public interface ITableStorageService
     {
-        Task<Order> InsertOrMergeEntityAsync(Order entity);
-        Task<Order> RetrieveEntityUsingPointQueryAsync(string partitionKey, string rowKey);
+        Task<T> InsertOrMergeEntityAsync<T>(T entity, string tableName) where T : TableEntity;
+        Task<Order> RetrieveEntityUsingPointQueryAsync(string partitionKey, string rowKey, string tableName);
+        Task<List<T>> InsertOrMergeMultipleEntityAsync<T>(List<T> entities, string tableName) where T : TableEntity;
+        Task<List<T>> RetrieveMultipleEntityUsingPartitionQueryAsync<T>(string partitionKey, string tableName) where T : TableEntity, new();
 
     }
 }
