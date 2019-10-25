@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.Swagger;
 
 namespace ddac.tp038654.services.orders
 {
@@ -30,6 +31,10 @@ namespace ddac.tp038654.services.orders
         {
             services.AddSingleton<ITableStorageService>(InitializeTableStorageClientInstanceAsync(Configuration.GetSection("TableStorage")).GetAwaiter().GetResult());
             services.AddScoped<ServiceBusSender>();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1",new Info() { Title= "Orders API"});
+            });
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
@@ -45,6 +50,13 @@ namespace ddac.tp038654.services.orders
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.RoutePrefix = string.Empty;
+            });
 
             app.UseHttpsRedirection();
             app.UseMvc();
